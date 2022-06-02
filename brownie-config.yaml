@@ -1,0 +1,22 @@
+dependencies:
+  - OpenZeppelin/openzeppelin-contracts@4.2.0
+compiler:
+  solc:
+    remappings:
+      - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.2.0"
+dotenv: .env
+dev_deployment_artifacts: True
+networks:
+  development:
+    verify: False
+  ganache:
+    verify: False
+  bsc-test:
+    verify: True
+    bnb_token: "0x6ce8dA28E2f864420840cF74474eFf5fD80E65B8"
+    eth_token: "0xd66c6B4F0be8CE5b39D52E0Fd1344c389929B378"
+    busd_token: "0xeD24FC36d5Ee211Ea25A80239Fb8C4Cfd80f12Ee"
+    # icc_token: "0x8d672014fb107cb409dccd9042dda3b97313f4c3"
+    icc_token: "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"
+wallets:
+  from_key: ${PRIVATE_KEY}
