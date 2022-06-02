@@ -1,0 +1,6 @@
+[submodule "brownie-icc-smart-contracts/ethereum-boilerplate"]
+	path = brownie-icc-smart-contracts/ethereum-boilerplate
+	url = https://github.com/eliashezron/eth-boilerplate.git
+[submodule "ethereum-boilerplate"]
+	path = ethereum-boilerplate
+	url = https://github.com/eliashezron/eth-boilerplate.git
