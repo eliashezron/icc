@@ -3,10 +3,14 @@
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract DepositAndWithdraw is Ownable {
+    using Counters for Counters.Counter;
+    Counters.Counter public userCount;
     struct User {
         address userAddress;
+        uint256 userId;
         mapping(address => uint256) uniqueTokensDeposited;
         mapping(address => mapping(address => uint256)) tokenBalances;
     }
@@ -31,7 +35,9 @@ contract DepositAndWithdraw is Ownable {
         public
         view
         returns (uint256)
+
     {
+        require(tokenIsAllowed(_tokenAddress));
         return IERC20(_tokenAddress).balanceOf(msg.sender);
     }
 
@@ -41,36 +47,30 @@ contract DepositAndWithdraw is Ownable {
             balanceOfToken(_token) >= _amount,
             "insufficient tokens available in your wallet"
         );
-        require(tokenIsAllowed(_token), "token is not allowed to be deposited");
         IERC20(_token).transferFrom(msg.sender, address(this), _amount);
         uint256 contractTokenBalance = contractTokenBalances[_token] += _amount;
         emit contractTokenBalanceAdjusted(_token, contractTokenBalance);
         if (alreadyUser[msg.sender]) {
             for (uint256 i = 0; i < users.length; i++) {
-                if (users[i].userAddress == msg.sender) {
                     if (users[i].tokenBalances[_token][msg.sender] <= 0) {
                         uint256 numberOfTokens = users[i].uniqueTokensDeposited[
                             _token
                         ] += 1;
                         emit tokenAdded(msg.sender, numberOfTokens);
-                        uint256 tokenBalance = users[i].tokenBalances[_token][
-                            msg.sender
-                        ] += _amount;
-
-                        emit tokenBalanceOf(msg.sender, _token, tokenBalance);
-                        break;
                     }
-                    users[i].uniqueTokensDeposited[_token] += 1;
-                    users[i].tokenBalances[_token][msg.sender] += _amount;
-                    break;
-                }
+                    uint256 tokenBalance = users[i].tokenBalances[_token][
+                      msg.sender
+                    ] += _amount;
+                    emit tokenBalanceOf(msg.sender, _token, tokenBalance);
             }
         }
         User storage u = users.push();
         u.userAddress = msg.sender;
+        u.userId = userCount.current();
         u.uniqueTokensDeposited[_token] += 1;
         u.tokenBalances[_token][msg.sender] += _amount;
         alreadyUser[msg.sender] = true;
+        userCount.increment();
         emit tokenAdded(msg.sender, 1);
         emit tokenBalanceOf(msg.sender, _token, _amount);
         emit userAdded(msg.sender);
@@ -79,7 +79,7 @@ contract DepositAndWithdraw is Ownable {
     function addAllowedTokens(address _token) public onlyOwner {
         allowedTokensAddresses.push(_token);
     }
-
+ 
     function tokenIsAllowed(address _token) public view returns (bool) {
         for (
             uint256 allowedTokensIndex = 0;
@@ -103,7 +103,6 @@ contract DepositAndWithdraw is Ownable {
             balanceOfToken(_token) >= _amount,
             "insufficient tokens available in the contract"
         );
-        require(tokenIsAllowed(_token), "token is not allowed to be withdrawn");
         IERC20(_token).transfer(_withdrawAddress, _amount);
         uint256 contractTokenBalance = contractTokenBalances[_token] -= _amount;
         emit contractTokenBalanceAdjusted(_token, contractTokenBalance);
